@@ -15,7 +15,8 @@ interface Props {
   id: string
   nombreArchivo: string
   onCambiarNombre: (nombre: string) => void
-  onVolver: () => void
+  /** En producción no se muestra el botón de volver a la galería. */
+  onVolver?: () => void
   oscuro: boolean
   original?: string
   onNuevo: (texto: string, id: string, nombre: string) => void
@@ -124,8 +125,12 @@ export function Editor({
     <section className="flex h-full min-h-0 flex-col gap-3">
       {/* Barra de acciones */}
       <div className="flex flex-wrap items-center gap-2">
-        <Boton onClick={onVolver}>← Galería</Boton>
-        <span className="mx-1 hidden h-6 w-px bg-slate-300 sm:block dark:bg-slate-600" />
+        {onVolver && (
+          <>
+            <Boton onClick={onVolver}>← Galería</Boton>
+            <span className="mx-1 hidden h-6 w-px bg-slate-300 sm:block dark:bg-slate-600" />
+          </>
+        )}
         <Boton
           onClick={() => onNuevo(plantillaOrganigrama(), `nuevo-organigrama-${Date.now()}`, 'organigrama.yaml')}
         >

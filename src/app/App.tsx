@@ -1,10 +1,16 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { Editor } from './componentes/Editor'
 import { Galeria } from './componentes/Galeria'
 import { Reglas } from './componentes/Reglas'
 import { EJEMPLOS } from './datos'
+import { plantillaOrganigrama } from '../core/plantillas'
 
-// El editor (con CodeMirror) se carga solo cuando hace falta.
-const Editor = lazy(() => import('./componentes/Editor').then((m) => ({ default: m.Editor })))
+/**
+ * En producción la app expone únicamente el editor (para usar en exámenes
+ * virtuales). La galería y las reglas quedan disponibles en desarrollo.
+ * Para probar el modo examen en desarrollo: VITE_SOLO_EDITOR=1 pnpm dev
+ */
+const SOLO_EDITOR = import.meta.env.PROD || import.meta.env.VITE_SOLO_EDITOR === '1'
 
 type Vista = 'galeria' | 'editor' | 'reglas'
 
@@ -17,6 +23,7 @@ interface EstadoInicial {
 
 /** Permite abrir un diagrama por enlace directo: #organigrama-el-roble */
 function estadoInicial(): EstadoInicial | null {
+  if (SOLO_EDITOR) return null // En producción siempre se arranca en el editor.
   if (typeof location === 'undefined') return null
   const id = location.hash.replace(/^#\/?/, '')
   if (!id) return null
@@ -35,11 +42,11 @@ function estadoInicial(): EstadoInicial | null {
 
 export function App() {
   const [inicial] = useState(estadoInicial)
-  const [vista, setVista] = useState<Vista>(inicial?.vista ?? 'galeria')
+  const [vista, setVista] = useState<Vista>(SOLO_EDITOR ? 'editor' : (inicial?.vista ?? 'galeria'))
   const [oscuro, setOscuro] = useState(() => localStorage.getItem('syo:oscuro') === '1')
   const [id, setId] = useState(inicial?.id ?? 'nuevo')
   const [nombreArchivo, setNombreArchivo] = useState(inicial?.nombreArchivo ?? 'organigrama.yaml')
-  const [texto, setTexto] = useState(inicial?.texto ?? '')
+  const [texto, setTexto] = useState(inicial?.texto ?? (SOLO_EDITOR ? plantillaOrganigrama() : ''))
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', oscuro)
@@ -90,39 +97,43 @@ export function App() {
           </div>
 
           <nav className="ml-auto flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => setVista('galeria')}
-              className={`rounded-md px-3 py-1.5 text-sm transition ${
-                vista === 'galeria'
-                  ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
-                  : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700'
-              }`}
-            >
-              Galería
-            </button>
-            <button
-              type="button"
-              onClick={() => setVista(vista === 'editor' ? 'galeria' : 'editor')}
-              className={`rounded-md px-3 py-1.5 text-sm transition ${
-                vista === 'editor'
-                  ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
-                  : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700'
-              }`}
-            >
-              Editor
-            </button>
-            <button
-              type="button"
-              onClick={() => setVista('reglas')}
-              className={`rounded-md px-3 py-1.5 text-sm transition ${
-                vista === 'reglas'
-                  ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
-                  : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700'
-              }`}
-            >
-              Reglas
-            </button>
+            {!SOLO_EDITOR && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setVista('galeria')}
+                  className={`rounded-md px-3 py-1.5 text-sm transition ${
+                    vista === 'galeria'
+                      ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
+                      : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  Galería
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setVista(vista === 'editor' ? 'galeria' : 'editor')}
+                  className={`rounded-md px-3 py-1.5 text-sm transition ${
+                    vista === 'editor'
+                      ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
+                      : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  Editor
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setVista('reglas')}
+                  className={`rounded-md px-3 py-1.5 text-sm transition ${
+                    vista === 'reglas'
+                      ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
+                      : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  Reglas
+                </button>
+              </>
+            )}
             <button
               type="button"
               onClick={() => setOscuro((v) => !v)}
@@ -140,29 +151,21 @@ export function App() {
 
         {vista === 'editor' &&
           (texto ? (
-            <Suspense
-              fallback={
-                <p className="rounded-md border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
-                  Cargando editor…
-                </p>
-              }
-            >
-              <Editor
-                texto={texto}
-                onChangeTexto={setTexto}
-                id={id}
-                nombreArchivo={nombreArchivo}
-                onCambiarNombre={setNombreArchivo}
-                onVolver={() => setVista('galeria')}
-                oscuro={oscuro}
-                original={original}
-                onNuevo={(nuevoTexto, nuevoId, nuevoNombre) => {
-                  setId(nuevoId)
-                  setTexto(nuevoTexto)
-                  setNombreArchivo(nuevoNombre)
-                }}
-              />
-            </Suspense>
+            <Editor
+              texto={texto}
+              onChangeTexto={setTexto}
+              id={id}
+              nombreArchivo={nombreArchivo}
+              onCambiarNombre={setNombreArchivo}
+              onVolver={SOLO_EDITOR ? undefined : () => setVista('galeria')}
+              oscuro={oscuro}
+              original={SOLO_EDITOR ? undefined : original}
+              onNuevo={(nuevoTexto, nuevoId, nuevoNombre) => {
+                setId(nuevoId)
+                setTexto(nuevoTexto)
+                setNombreArchivo(nuevoNombre)
+              }}
+            />
           ) : (
             <p className="rounded-md border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
               Abrí un diagrama desde la galería o creá uno nuevo desde el editor.
@@ -173,9 +176,15 @@ export function App() {
       </main>
 
       <footer className="border-t border-slate-200 px-4 py-3 text-center text-xs text-slate-400 dark:border-slate-700">
-        Hecho para estudiar SyO (UNNOBA) · el contenido vive en <code className="font-mono">diagramas/*.yaml</code> ·
-        los agentes pueden usar <code className="font-mono">pnpm validar</code> y{' '}
-        <code className="font-mono">pnpm render</code>
+        {SOLO_EDITOR ? (
+          <>Editor de organigramas y DFD · SyO (UNNOBA)</>
+        ) : (
+          <>
+            Hecho para estudiar SyO (UNNOBA) · el contenido vive en{' '}
+            <code className="font-mono">diagramas/*.yaml</code> · los agentes pueden usar{' '}
+            <code className="font-mono">pnpm validar</code> y <code className="font-mono">pnpm render</code>
+          </>
+        )}
       </footer>
     </div>
   )

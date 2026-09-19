@@ -15,7 +15,19 @@ pnpm install
 pnpm dev        # http://localhost:5173
 ```
 
-Enlaces directos: `#organigrama-el-roble`, `#dfd-subi-n1`, `#reglas`.
+Enlaces directos (solo en desarrollo): `#organigrama-el-roble`, `#dfd-subi-n1`, `#reglas`.
+
+## Modo examen (build de producción)
+
+El build de producción (`pnpm build` → GitHub Pages) expone **únicamente el editor**, sin
+galería ni página de reglas, y arranca con una planilla lista para escribir. La galería y
+las reglas quedan disponibles en desarrollo (`pnpm dev`).
+
+Para probar el modo examen en desarrollo:
+
+```bash
+VITE_SOLO_EDITOR=1 pnpm dev
+```
 
 ## Comandos
 
