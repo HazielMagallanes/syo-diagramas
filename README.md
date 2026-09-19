@@ -19,10 +19,13 @@ Enlaces directos (solo en desarrollo): `#organigrama-el-roble`, `#dfd-subi-n1`, 
 
 ## Modo examen (build de producción)
 
-El build de producción (`pnpm build` → GitHub Pages) expone **únicamente el editor**, sin
-galería ni página de reglas, y arranca con una planilla lista para escribir. La galería y
-las reglas quedan disponibles en desarrollo (`pnpm dev`).
+El build de producción (`pnpm build` → GitHub Pages) es un **graficador puro**: sin galería,
+sin página de reglas y **sin validador de la cátedra**. La app arranca con una plantilla lista
+para escribir, dibuja lo que diga el YAML (aunque viole reglas, no corrige) y solo avisa de
+errores de *estructura* (YAML inválido), que son los que impiden dibujar. Los borradores se
+recuperan si se recarga el navegador.
 
+La galería, las reglas y el panel de validación quedan disponibles en desarrollo (`pnpm dev`).
 Para probar el modo examen en desarrollo:
 
 ```bash

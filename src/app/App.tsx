@@ -3,14 +3,8 @@ import { Editor } from './componentes/Editor'
 import { Galeria } from './componentes/Galeria'
 import { Reglas } from './componentes/Reglas'
 import { EJEMPLOS } from './datos'
+import { SOLO_GRAFICADOR } from './entorno'
 import { plantillaOrganigrama } from '../core/plantillas'
-
-/**
- * En producción la app expone únicamente el editor (para usar en exámenes
- * virtuales). La galería y las reglas quedan disponibles en desarrollo.
- * Para probar el modo examen en desarrollo: VITE_SOLO_EDITOR=1 pnpm dev
- */
-const SOLO_EDITOR = import.meta.env.PROD || import.meta.env.VITE_SOLO_EDITOR === '1'
 
 type Vista = 'galeria' | 'editor' | 'reglas'
 
@@ -23,7 +17,7 @@ interface EstadoInicial {
 
 /** Permite abrir un diagrama por enlace directo: #organigrama-el-roble */
 function estadoInicial(): EstadoInicial | null {
-  if (SOLO_EDITOR) return null // En producción siempre se arranca en el editor.
+  if (SOLO_GRAFICADOR) return null // En modo examen siempre se arranca en el editor.
   if (typeof location === 'undefined') return null
   const id = location.hash.replace(/^#\/?/, '')
   if (!id) return null
@@ -42,11 +36,17 @@ function estadoInicial(): EstadoInicial | null {
 
 export function App() {
   const [inicial] = useState(estadoInicial)
-  const [vista, setVista] = useState<Vista>(SOLO_EDITOR ? 'editor' : (inicial?.vista ?? 'galeria'))
+  const [vista, setVista] = useState<Vista>(SOLO_GRAFICADOR ? 'editor' : (inicial?.vista ?? 'galeria'))
   const [oscuro, setOscuro] = useState(() => localStorage.getItem('syo:oscuro') === '1')
   const [id, setId] = useState(inicial?.id ?? 'nuevo')
   const [nombreArchivo, setNombreArchivo] = useState(inicial?.nombreArchivo ?? 'organigrama.yaml')
-  const [texto, setTexto] = useState(inicial?.texto ?? (SOLO_EDITOR ? plantillaOrganigrama() : ''))
+  const [texto, setTexto] = useState(
+    inicial?.texto ??
+      (SOLO_GRAFICADOR
+        ? // En modo examen se retoma el borrador si el navegador se recargó.
+          (localStorage.getItem('syo:borrador:nuevo') ?? plantillaOrganigrama())
+        : ''),
+  )
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', oscuro)
@@ -91,13 +91,15 @@ export function App() {
             <div>
               <h1 className="text-base font-semibold leading-tight">SyO · Organigramas y DFD</h1>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                UNNOBA · reglas de la cátedra · exportable a SVG, PNG y PDF
+                {SOLO_GRAFICADOR
+                  ? 'UNNOBA · exportable a SVG, PNG y PDF'
+                  : 'UNNOBA · reglas de la cátedra · exportable a SVG, PNG y PDF'}
               </p>
             </div>
           </div>
 
           <nav className="ml-auto flex items-center gap-1">
-            {!SOLO_EDITOR && (
+            {!SOLO_GRAFICADOR && (
               <>
                 <button
                   type="button"
@@ -157,9 +159,9 @@ export function App() {
               id={id}
               nombreArchivo={nombreArchivo}
               onCambiarNombre={setNombreArchivo}
-              onVolver={SOLO_EDITOR ? undefined : () => setVista('galeria')}
+              onVolver={SOLO_GRAFICADOR ? undefined : () => setVista('galeria')}
               oscuro={oscuro}
-              original={SOLO_EDITOR ? undefined : original}
+              original={SOLO_GRAFICADOR ? undefined : original}
               onNuevo={(nuevoTexto, nuevoId, nuevoNombre) => {
                 setId(nuevoId)
                 setTexto(nuevoTexto)
@@ -176,7 +178,7 @@ export function App() {
       </main>
 
       <footer className="border-t border-slate-200 px-4 py-3 text-center text-xs text-slate-400 dark:border-slate-700">
-        {SOLO_EDITOR ? (
+        {SOLO_GRAFICADOR ? (
           <>Editor de organigramas y DFD · SyO (UNNOBA)</>
         ) : (
           <>

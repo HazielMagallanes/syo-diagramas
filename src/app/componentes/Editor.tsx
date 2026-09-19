@@ -1,9 +1,11 @@
 import { useMemo, useRef, useState } from 'react'
 import { aJson, aYaml, analizarSeguro } from '../../core/analizar'
 import { renderizar } from '../../core/render'
-import { hayErrores, validar } from '../../core/reglas'
+import { validar } from '../../core/reglas'
 import { plantillaDfd, plantillaOrganigrama } from '../../core/plantillas'
 import type { Hallazgo } from '../../core/tipos'
+import { SOLO_GRAFICADOR } from '../entorno'
+import { debeBloquearRender } from '../utiles/modo'
 import { EditorYaml } from './EditorYaml'
 import { PanelHallazgos } from './PanelHallazgos'
 import { VistaPrevia } from './VistaPrevia'
@@ -71,7 +73,11 @@ export function Editor({
 }: Props) {
   const analisis = useMemo(() => analizarSeguro(texto), [texto])
   const diagrama = analisis.diagrama
-  const hallazgos = useMemo(() => (diagrama ? validar(diagrama) : []), [diagrama])
+  // En modo examen no se valida nada: la app es solo un graficador.
+  const hallazgos = useMemo(
+    () => (diagrama && !SOLO_GRAFICADOR ? validar(diagrama) : []),
+    [diagrama],
+  )
   const [seleccion, setSeleccion] = useState<Hallazgo | null>(null)
   const [monocromo, setMonocromo] = useState(false)
   const [leyenda, setLeyenda] = useState(true)
@@ -79,7 +85,7 @@ export function Editor({
   const [aviso, setAviso] = useState<string | null>(null)
 
   const render = useMemo(() => {
-    if (!diagrama || hayErrores(hallazgos)) return null
+    if (!diagrama || debeBloquearRender(hallazgos, SOLO_GRAFICADOR)) return null
     try {
       return renderizar(diagrama, { monocromo, leyenda })
     } catch {
@@ -147,12 +153,18 @@ export function Editor({
 
         <span className="mx-1 hidden h-6 w-px bg-slate-300 sm:block dark:bg-slate-600" />
 
-        <Boton onClick={() => descargarSvg(render?.svg ?? '', `${slug}.svg`)} titulo="Descargar SVG vectorial">
+        <Boton
+          onClick={() => {
+            if (!render) return avisar('El diagrama todavía no se puede generar: revisá el YAML.')
+            return descargarSvg(render.svg, `${slug}.svg`)
+          }}
+          titulo="Descargar SVG vectorial"
+        >
           SVG
         </Boton>
         <Boton
           onClick={() => {
-            if (!render) return avisar('Primero corregí los errores.')
+            if (!render) return avisar('El diagrama todavía no se puede generar: revisá el YAML.')
             void descargarPng(render.svg, `${slug}.png`)
           }}
           titulo="Descargar PNG (2x)"
@@ -181,7 +193,6 @@ export function Editor({
         >
           JSON
         </Boton>
-
         <div className="ml-auto flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
           <label className="flex items-center gap-1.5">
             <input type="checkbox" checked={monocromo} onChange={(e) => setMonocromo(e.target.checked)} />
@@ -223,7 +234,7 @@ export function Editor({
                 checked={diagrama.esSA ?? false}
                 onChange={(e) => onChangeTexto(conCampo(texto, 'esSA', String(e.target.checked)))}
               />
-              S.A. (exige AGA y Directorio)
+              {SOLO_GRAFICADOR ? 'S.A.' : 'S.A. (exige AGA y Directorio)'}
             </label>
             <label className="flex items-center gap-1.5">
               <input
@@ -253,20 +264,37 @@ export function Editor({
         {aviso && <span className="text-xs text-slate-500 dark:text-slate-400">{aviso}</span>}
       </div>
 
-      {/* Paneles */}
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[minmax(320px,1fr)_minmax(360px,1.4fr)_minmax(280px,0.8fr)]">
+      {/* Errores de estructura (YAML): se muestran siempre, también en modo
+          examen, porque sin ellos no hay forma de saber por qué no dibuja. */}
+      {analisis.errores.length > 0 && (
+        <div className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-xs text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">
+          <span className="font-semibold">Errores de estructura: </span>
+          {analisis.errores.join(' · ')}
+        </div>
+      )}
+
+      {/* Paneles: en modo examen solo editor + graficador. */}
+      <div
+        className={`grid min-h-0 flex-1 grid-cols-1 gap-4 ${
+          SOLO_GRAFICADOR
+            ? 'lg:grid-cols-[minmax(320px,1fr)_minmax(420px,1.6fr)]'
+            : 'lg:grid-cols-[minmax(320px,1fr)_minmax(360px,1.4fr)_minmax(280px,0.8fr)]'
+        }`}
+      >
         <div className="min-h-[320px] lg:min-h-0">
           <EditorYaml valor={texto} onChange={onChangeTexto} oscuro={oscuro} />
         </div>
         <VistaPrevia ref={refLienzo} svg={render?.svg ?? null} resaltados={resaltados} />
-        <div className="min-h-[240px] overflow-hidden rounded-md border border-slate-200 p-3 lg:min-h-0 dark:border-slate-700">
-          <PanelHallazgos
-            hallazgos={hallazgos}
-            erroresEstructura={analisis.errores}
-            seleccionado={seleccion}
-            onSeleccionar={(h) => setSeleccion(h)}
-          />
-        </div>
+        {!SOLO_GRAFICADOR && (
+          <div className="min-h-[240px] overflow-hidden rounded-md border border-slate-200 p-3 lg:min-h-0 dark:border-slate-700">
+            <PanelHallazgos
+              hallazgos={hallazgos}
+              erroresEstructura={analisis.errores}
+              seleccionado={seleccion}
+              onSeleccionar={(h) => setSeleccion(h)}
+            />
+          </div>
+        )}
       </div>
     </section>
   )
