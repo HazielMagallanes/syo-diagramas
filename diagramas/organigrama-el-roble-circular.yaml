@@ -1,0 +1,69 @@
+tipo: organigrama
+titulo: Materiales "El Roble S.A." — disposición circular
+disposicion: circular
+esSA: true
+nota: >-
+  Resuelto en clase. Por ser S.A. se grafican AGA y Directorio (regla de la
+  cátedra). Consultoría Jurídica y Secretaría son unidades de apoyo (staff)
+  del Gerente General: asesoran, no mandan.
+unidades:
+  - id: aga
+    nombre: Asamblea General de Accionistas
+  - id: directorio
+    nombre: Directorio
+    padre: aga
+  - id: gg
+    nombre: Gerencia General
+    padre: directorio
+
+  - id: consultoria
+    nombre: Consultoría Jurídica
+    vinculo: staff
+    asesoraA: gg
+    lado: izq
+  - id: secretaria
+    nombre: Secretaría
+    vinculo: staff
+    asesoraA: gg
+    lado: izq
+
+  - id: ventas
+    nombre: Departamento de Ventas
+    padre: gg
+  - id: compras
+    nombre: Departamento de Compras
+    padre: gg
+  - id: administracion
+    nombre: Departamento de Administración
+    padre: gg
+  - id: almacen
+    nombre: Departamento de Almacén
+    padre: gg
+
+  - id: caja
+    nombre: Sección Caja
+    padre: ventas
+  - id: supervisor
+    nombre: Sección Supervisor y Chequeo
+    padre: ventas
+
+  - id: revision
+    nombre: Sección Revisión
+    padre: compras
+  - id: precios
+    nombre: Sección Fijación de Precios
+    padre: compras
+
+  - id: contabilidad
+    nombre: Sección Contabilidad
+    padre: administracion
+  - id: financiamientos
+    nombre: Sección Financiamientos
+    padre: administracion
+  - id: archivo
+    nombre: Sección Archivo
+    padre: administracion
+
+  - id: servicios
+    nombre: Unidad de Servicios
+    padre: almacen
