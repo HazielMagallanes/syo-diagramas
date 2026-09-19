@@ -41,6 +41,13 @@ export interface DisenoOrganigrama {
   lineas: LineaOrganigrama[]
   /** Posiciones (y en vertical, x en horizontal) de los separadores entre niveles. */
   separadores: Array<{ posicion: number; profundidad: number }>
+  /** Circunferencias guía de las disposiciones radiales. */
+  guias?: {
+    cx: number
+    cy: number
+    radios: number[]
+    semicircular: boolean
+  }
 }
 
 interface NodoDatos {
@@ -189,94 +196,149 @@ export function diagramarOrganigrama(o: Organigrama): DisenoOrganigrama {
     anchoNivel[n.profundidad] = Math.max(anchoNivel[n.profundidad], n.ancho)
   }
 
+  // Centro de cada nivel para las disposiciones rectangulares.
   const centroNivel = new Array<number>(maxProfundidad + 1).fill(0)
-  let acumulado = MARGEN
-  for (let d = 0; d <= maxProfundidad; d++) {
-    const tamano = radial
-      ? d === 0
-        ? 0
-        : Math.max(altoNivel[d - 1], altoNivel[d]) / 2 + HUECO_RADIAL
-      : (horizontal ? anchoNivel[d] : altoNivel[d]) / 2
-    acumulado += tamano
-    centroNivel[d] = acumulado
-    acumulado += radial ? 0 : (horizontal ? anchoNivel[d] : altoNivel[d]) / 2 + HUECO_NIVEL
+  if (!radial) {
+    let acumulado = MARGEN
+    for (let d = 0; d <= maxProfundidad; d++) {
+      const mitad = (horizontal ? anchoNivel[d] : altoNivel[d]) / 2
+      acumulado += mitad
+      centroNivel[d] = acumulado
+      acumulado += mitad + HUECO_NIVEL
+    }
   }
 
-  // ── Radios para disposiciones radiales ──────────────────────────────────
-  // El radio de cada anillo se calcula por demanda angular (que las cajas
-  // entren a lo largo de la circunferencia) y por separación entre niveles.
   const anclas = new Map<string, NodoDatos>()
   for (const n of nodos) anclas.set(n.unidad.id, n)
 
-  const radioNivel = new Array<number>(maxProfundidad + 1).fill(0)
-  if (radial) {
-    const span = o.disposicion === 'circular' ? Math.PI * 2 : Math.PI
-    const demanda = new Array<number>(maxProfundidad + 1).fill(0)
-    const anchoNivel = new Array<number>(maxProfundidad + 1).fill(0)
-    for (const n of nodos) {
-      const d = n.staff ? (anclas.get(n.padreId ?? '')?.profundidad ?? 0) : n.profundidad
-      const dd = Math.max(0, Math.min(d, maxProfundidad))
-      demanda[dd] += n.ancho + 28
-      anchoNivel[dd] = Math.max(anchoNivel[dd], n.ancho)
-    }
-    for (let d = 0; d <= maxProfundidad; d++) {
-      if (d === 0) {
-        radioNivel[0] = 0
-        continue
-      }
-      const porDemanda = (demanda[d] / span) * 1.15
-      // En los laterales del círculo la separación entre anillos es
-      // horizontal: hay que dejar lugar al ancho de las cajas.
-      const porSeparacion =
-        radioNivel[d - 1] + 0.55 * (anchoNivel[d - 1] + anchoNivel[d]) + 30
-      radioNivel[d] = Math.max(porDemanda, porSeparacion)
-    }
-  }
-
   // ── Posiciones ──────────────────────────────────────────────────────────
   const cajas: CajaUnidad[] = []
+  /** Radios de los anillos radiales (índice = profundidad), para las guías. */
+  let radiosRadiales: number[] = []
 
-  const xBruto = nodos.map((n) => posiciones.get(n.unidad.id) ?? 0)
-  const minBruto = Math.min(...xBruto)
-  const maxBruto = Math.max(...xBruto)
-  const rango = maxBruto - minBruto || 1
+  if (radial) {
+    // Layout radial clásico: a cada subárbol le toca un sector proporcional a
+    // su cantidad de hojas y cada nivel es un anillo. Después se agrandan los
+    // radios hasta que no quede ningún par de cajas superpuestas.
+    const span = o.disposicion === 'circular' ? Math.PI * 2 : Math.PI
+    // En el círculo hay que dejar una "costura" entre la primera y la última
+    // rama; si no, ambas caen en el mismo punto (arriba).
+    const costura = o.disposicion === 'circular' ? 0.16 : 0
+    const usable = span - costura
+    const theta0 = o.disposicion === 'circular' ? -Math.PI / 2 : Math.PI
 
-  for (const n of nodos) {
-    const bruto = posiciones.get(n.unidad.id) ?? 0
-    const profundidad = n.staff ? (anclas.get(n.padreId ?? '')?.profundidad ?? n.profundidad - 1) : n.profundidad
-    let x = 0
-    let y = 0
-    if (o.disposicion === 'vertical') {
-      x = bruto
-      const anclaNodo = n.staff ? anclas.get(n.padreId ?? '') : undefined
-      const baseY = anclaNodo ? centroNivel[anclaNodo.profundidad] : centroNivel[profundidad]
-      // Los asesores del mismo lado se escalonan hacia arriba para que sus
-      // líneas no crucen las cajas de los otros.
-      y = n.staff ? baseY - (n.staffIndice ?? 0) * (n.alto + 12) : centroNivel[profundidad]
-    } else if (o.disposicion === 'horizontal') {
-      x = centroNivel[profundidad]
-      y = bruto
-    } else {
-      const norm = (bruto - minBruto) / rango
-      const theta =
-        o.disposicion === 'circular'
-          ? norm * 2 * Math.PI - Math.PI / 2
-          : Math.PI + norm * Math.PI
-      const radio = radioNivel[Math.max(0, Math.min(profundidad, maxProfundidad))] ?? 0
-      x = Math.cos(theta) * radio
-      y = Math.sin(theta) * radio
+    const peso = new Map<string, number>()
+    const calcularPeso = (n: NodoDatos): number => {
+      const p = n.hijos.length === 0 ? 1 : n.hijos.reduce((s, h) => s + calcularPeso(h), 0)
+      peso.set(n.unidad.id, p)
+      return p
     }
-    cajas.push({
-      id: n.unidad.id,
-      unidad: n.unidad,
-      x,
-      y,
-      ancho: n.ancho,
-      alto: n.alto,
-      lineas: n.lineas,
-      profundidad: n.staff ? -1 : n.profundidad,
-      staff: n.staff,
-    })
+    calcularPeso(raiz)
+
+    const angulo = new Map<string, number>()
+    const asignarSectores = (n: NodoDatos, desde: number, hasta: number): void => {
+      angulo.set(n.unidad.id, (desde + hasta) / 2)
+      let cursor = desde
+      const total = peso.get(n.unidad.id) ?? 1
+      for (const h of n.hijos) {
+        const sector = (hasta - desde) * ((peso.get(h.unidad.id) ?? 1) / total)
+        asignarSectores(h, cursor, cursor + sector)
+        cursor += sector
+      }
+    }
+    asignarSectores(raiz, 0, usable)
+
+    // Radios iniciales: demanda angular del anillo + separación entre niveles.
+    const demanda = new Array<number>(maxProfundidad + 1).fill(0)
+    for (const n of nodos) demanda[n.profundidad] += n.ancho + 26
+
+    radiosRadiales = new Array<number>(maxProfundidad + 1).fill(0)
+    for (let d = 1; d <= maxProfundidad; d++) {
+      radiosRadiales[d] = Math.max(
+        (demanda[d] / usable) * 1.08,
+        radiosRadiales[d - 1] + (altoNivel[d - 1] + altoNivel[d]) / 2 + HUECO_RADIAL * 0.7,
+      )
+    }
+
+    const colocar = (radios: number[]): CajaUnidad[] =>
+      nodos.map((n) => {
+        const theta = theta0 + (angulo.get(n.unidad.id) ?? 0)
+        const radio = radios[n.profundidad] ?? 0
+        return {
+          id: n.unidad.id,
+          unidad: n.unidad,
+          x: Math.cos(theta) * radio,
+          y: Math.sin(theta) * radio,
+          ancho: n.ancho,
+          alto: n.alto,
+          lineas: n.lineas,
+          profundidad: n.profundidad,
+          staff: n.staff,
+        }
+      })
+
+    let radiales = colocar(radiosRadiales)
+    for (let iter = 0; iter < 120; iter++) {
+      const choques: Array<[CajaUnidad, CajaUnidad]> = []
+      for (let i = 0; i < radiales.length; i++) {
+        for (let j = i + 1; j < radiales.length; j++) {
+          const a = radiales[i]
+          const b = radiales[j]
+          if (
+            Math.abs(a.x - b.x) < (a.ancho + b.ancho) / 2 - 1 &&
+            Math.abs(a.y - b.y) < (a.alto + b.alto) / 2 - 1
+          ) {
+            choques.push([a, b])
+          }
+        }
+      }
+      if (choques.length === 0) break
+      for (const [a, b] of choques) {
+        radiosRadiales[Math.max(a.profundidad, b.profundidad)] += 16
+      }
+      // Mantener la separación mínima entre anillos.
+      for (let d = 1; d <= maxProfundidad; d++) {
+        radiosRadiales[d] = Math.max(
+          radiosRadiales[d],
+          radiosRadiales[d - 1] + (altoNivel[d - 1] + altoNivel[d]) / 2 + 24,
+        )
+      }
+      radiales = colocar(radiosRadiales)
+    }
+    cajas.push(...radiales)
+  } else {
+    // Disposiciones rectangulares: una coordenada sale del árbol ordenado
+    // (flextree) y la otra del nivel.
+    for (const n of nodos) {
+      const bruto = posiciones.get(n.unidad.id) ?? 0
+      const profundidad = n.staff
+        ? (anclas.get(n.padreId ?? '')?.profundidad ?? n.profundidad - 1)
+        : n.profundidad
+      let x = 0
+      let y = 0
+      if (o.disposicion === 'vertical') {
+        x = bruto
+        const anclaNodo = n.staff ? anclas.get(n.padreId ?? '') : undefined
+        const baseY = anclaNodo ? centroNivel[anclaNodo.profundidad] : centroNivel[profundidad]
+        // Los asesores del mismo lado se escalonan hacia arriba para que sus
+        // líneas no crucen las cajas de los otros.
+        y = n.staff ? baseY - (n.staffIndice ?? 0) * (n.alto + 12) : centroNivel[profundidad]
+      } else {
+        x = centroNivel[profundidad]
+        y = bruto
+      }
+      cajas.push({
+        id: n.unidad.id,
+        unidad: n.unidad,
+        x,
+        y,
+        ancho: n.ancho,
+        alto: n.alto,
+        lineas: n.lineas,
+        profundidad: n.staff ? -1 : n.profundidad,
+        staff: n.staff,
+      })
+    }
   }
 
   const porId = new Map(cajas.map((c) => [c.id, c]))
@@ -432,7 +494,7 @@ export function diagramarOrganigrama(o: Organigrama): DisenoOrganigrama {
     }
   }
 
-  // ── Normalizar a coordenadas positivas ──────────────────────────────────
+  // ── Normalizar y centrar ────────────────────────────────────────────────
   let minX = Number.POSITIVE_INFINITY
   let minY = Number.POSITIVE_INFINITY
   let maxX = Number.NEGATIVE_INFINITY
@@ -444,8 +506,37 @@ export function diagramarOrganigrama(o: Organigrama): DisenoOrganigrama {
     maxY = Math.max(maxY, c.y + c.alto / 2)
   }
 
-  const dx = MARGEN - minX
-  const dy = MARGEN - minY
+  let ancho = maxX - minX + MARGEN * 2
+  let alto = maxY - minY + MARGEN * 2
+  let dx = MARGEN - minX
+  let dy = MARGEN - minY
+  let guias: DisenoOrganigrama['guias']
+
+  if (radial) {
+    // En radial la raíz (que quedó en el origen) manda: el lienzo se calcula
+    // simétrico respecto de ella, no del bounding box.
+    const extension = Math.max(maxX, -minX)
+    ancho = 2 * extension + MARGEN * 2
+    dx = ancho / 2
+    if (o.disposicion === 'circular') {
+      const extensionY = Math.max(maxY, -minY)
+      const lado = 2 * Math.max(extension, extensionY) + MARGEN * 2
+      ancho = lado
+      alto = lado
+      dx = lado / 2
+      dy = lado / 2
+    } else {
+      alto = maxY - minY + MARGEN * 2
+      dy = MARGEN - minY
+    }
+    guias = {
+      cx: dx,
+      cy: dy,
+      radios: radiosRadiales.slice(1),
+      semicircular: o.disposicion === 'semicircular',
+    }
+  }
+
   for (const c of cajas) {
     c.x += dx
     c.y += dy
@@ -458,11 +549,5 @@ export function diagramarOrganigrama(o: Organigrama): DisenoOrganigrama {
   }
   for (const s of separadores) s.posicion += horizontal ? dx : dy
 
-  return {
-    ancho: maxX - minX + MARGEN * 2,
-    alto: maxY - minY + MARGEN * 2,
-    cajas,
-    lineas,
-    separadores,
-  }
+  return { ancho, alto, cajas, lineas, separadores, guias }
 }

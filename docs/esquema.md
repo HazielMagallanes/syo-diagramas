@@ -52,10 +52,19 @@ unidades:
 
 - `vertical`: pirámide clásica, niveles de arriba hacia abajo.
 - `horizontal`: la jerarquía avanza de izquierda a derecha.
-- `circular`: la raíz al centro y anillos concéntricos por nivel.
-- `semicircular`: como la circular, pero sobre media circunferencia.
+- `circular`: la raíz al centro y anillos concéntricos por nivel, con una costura arriba.
+- `semicircular`: como la circular, pero en abanico sobre media circunferencia (raíz al pie).
 
 En todas: mismo nivel → misma altura (o mismo radio), garantizado por el motor de layout.
+En las radiales, los sectores se reparten según la cantidad de hojas de cada rama y el motor
+agranda los anillos hasta que no queda ninguna caja superpuesta.
+
+Con `mostrarNiveles: true` se dibujan las guías: franjas horizontales en vertical/horizontal,
+y circunferencias (o arcos) punteados con "Nivel N" en circular/semicircular.
+
+> Recomendación: para organizaciones grandes (más de ~4 niveles o muchos nodos) las
+> disposiciones vertical u horizontal se leen mejor; la circular queda más linda pero
+> ocupa mucha área.
 
 ---
 

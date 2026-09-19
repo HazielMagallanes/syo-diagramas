@@ -43,8 +43,8 @@ export function renderizarOrganigrama(
     `<text x="${n(anchoTotal / 2)}" y="26" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="16" font-weight="600" fill="${colorTexto}">${esc(organigrama.titulo)}</text>`,
   )
 
-  // Niveles (franjas)
-  if (mostrarNiveles && diseno.separadores.length > 0) {
+  // Niveles (franjas) y guías radiales
+  if (mostrarNiveles) {
     for (const sep of diseno.separadores) {
       const horizontal = organigrama.disposicion === 'horizontal'
       const linea = horizontal
@@ -59,6 +59,26 @@ export function renderizarOrganigrama(
           { tamano: 10, color: colorNivel, ancla: horizontal ? 'middle' : 'start' },
         ),
       )
+    }
+
+    if (diseno.guias) {
+      const { cx, cy, radios, semicircular } = diseno.guias
+      radios.forEach((radio, i) => {
+        if (radio <= 0) return
+        if (semicircular) {
+          partes.push(
+            `<path d="M ${n(cx - radio)} ${n(cy)} A ${n(radio)} ${n(radio)} 0 0 0 ${n(cx + radio)} ${n(cy)}" fill="none" stroke="${colorNivel}" stroke-width="1" stroke-dasharray="6 6"/>`,
+          )
+        } else {
+          partes.push(
+            `<circle cx="${n(cx)}" cy="${n(cy)}" r="${n(radio)}" fill="none" stroke="${colorNivel}" stroke-width="1" stroke-dasharray="6 6"/>`,
+          )
+        }
+        const angulo = semicircular ? (225 * Math.PI) / 180 : -Math.PI / 2
+        const lx = semicircular ? cx + radio * Math.cos(angulo) : cx
+        const ly = semicircular ? cy + radio * Math.sin(angulo) : cy - radio - 8
+        partes.push(textoCentrado(lx, ly, [`Nivel ${i + 2}`], { tamano: 10, color: colorNivel }))
+      })
     }
   }
 
