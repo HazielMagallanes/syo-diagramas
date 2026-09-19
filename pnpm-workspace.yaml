@@ -1,0 +1,26 @@
+# Configuración de pnpm para este repo (no es un workspace multi-paquete).
+#
+# minimumReleaseAge: 7 días (10080 minutos). pnpm solo instala versiones de
+# paquetes publicadas hace al menos ese tiempo, mitigando ataques de cadena de
+# suministro. Al declararlo explícitamente, el modo estricto queda activo:
+# si nada maduro satisface el rango, la instalación falla en vez de advertir.
+minimumReleaseAge: 10080
+
+# Excepciones puntuales (descomentar solo si hace falta):
+# minimumReleaseAgeExclude:
+#   - 'paquete@1.2.3'
+
+# pnpm >=10 bloquea los scripts de postinstall por defecto.
+# En pnpm 11 se aprueban con `allowBuilds` (mapa paquete → true/false):
+allowBuilds:
+  esbuild: true
+  '@tailwindcss/oxide': true
+  core-js: false
+
+# Nota: `trustPolicy: no-downgrade` (endurecimiento extra) está desactivado a
+# propósito: bloquea transitivas legítimas y antiguas como semver@6.3.1, muy
+# usadas por tooling de build. minimumReleaseAge ya cubre el riesgo principal.
+# Si se quisiera activar:
+#   trustPolicy: no-downgrade
+#   trustPolicyExclude:
+#     - semver@6.3.1

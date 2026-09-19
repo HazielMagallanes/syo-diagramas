@@ -1,0 +1,32 @@
+tipo: dfd
+titulo: Venta de productos de limpieza
+nivel: 0
+nota: >-
+  Nivel 0 (contexto): un único proceso que representa al sistema completo y sus
+  entidades externas. No se muestran almacenes.
+nodos:
+  - id: sistema
+    tipo: proceso
+    nombre: Sistema de ventas de productos de limpieza
+  - id: estudio-mercado
+    tipo: entidad
+    nombre: Departamento de Estudio de Mercado
+  - id: clientes
+    tipo: entidad
+    nombre: Clientes
+  - id: marketing
+    tipo: entidad
+    nombre: Departamento de Marketing
+flujos:
+  - de: estudio-mercado
+    a: sistema
+    etiqueta: Informe de mercado (posibles clientes)
+  - de: clientes
+    a: sistema
+    etiqueta: Datos personales / cita / tarjeta firmada
+  - de: sistema
+    a: clientes
+    etiqueta: Contacto telefónico y mailings de ofertas
+  - de: sistema
+    a: marketing
+    etiqueta: Informe semanal clasificado por perfiles

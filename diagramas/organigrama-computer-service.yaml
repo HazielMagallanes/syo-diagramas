@@ -1,0 +1,64 @@
+tipo: organigrama
+titulo: Computer Service — Venta de computadoras clonadas
+disposicion: vertical
+nota: >-
+  El Gerente de Personal funciona "en calidad de asesor": es staff del Gerente
+  General, sin autoridad de mando. El Asesor Legal es externo ("llega por
+  horas"). El Asesor de Mercado es staff de la Gerencia de Comercialización.
+unidades:
+  - id: gg
+    nombre: Propietario / Gerente General
+  - id: asesor-legal
+    nombre: Asesor Legal Externo
+    vinculo: staff
+    asesoraA: gg
+    lado: izq
+  - id: gerente-personal
+    nombre: Gerente de Personal (asesor)
+    vinculo: staff
+    asesoraA: gg
+    lado: der
+
+  - id: gerente-financiero
+    nombre: Gerente Financiero
+    padre: gg
+  - id: contabilidad-general
+    nombre: Departamento de Contabilidad General
+    padre: gerente-financiero
+  - id: contabilidad-costos
+    nombre: Departamento de Contabilidad de Costos
+    padre: gerente-financiero
+  - id: tesoreria
+    nombre: Departamento de Tesorería
+    padre: gerente-financiero
+
+  - id: gerente-produccion
+    nombre: Gerente de Producción
+    padre: gg
+  - id: compras
+    nombre: Departamento de Compras
+    padre: gerente-produccion
+  - id: ensamble
+    nombre: Departamento de Ensamble
+    padre: gerente-produccion
+  - id: informatica
+    nombre: Departamento de Informática
+    padre: gerente-produccion
+
+  - id: gerente-comercializacion
+    nombre: Gerente de Comercialización
+    padre: gg
+  - id: asesor-mercado
+    nombre: Asesor de Mercado
+    vinculo: staff
+    asesoraA: gerente-comercializacion
+    lado: der
+  - id: publicidad
+    nombre: Departamento de Publicidad
+    padre: gerente-comercializacion
+  - id: promocion
+    nombre: Departamento de Promoción
+    padre: gerente-comercializacion
+  - id: ventas
+    nombre: Departamento de Ventas
+    padre: gerente-comercializacion

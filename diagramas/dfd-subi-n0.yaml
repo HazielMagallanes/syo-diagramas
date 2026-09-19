@@ -1,0 +1,32 @@
+tipo: dfd
+titulo: Sistema SUBI — Secretaría de Transporte
+nivel: 0
+nota: >-
+  Nivel 0 (contexto). Ojo: el dispositivo lector NO es una entidad externa,
+  forma parte del sistema (es su interfaz). No se modela hardware.
+nodos:
+  - id: sistema
+    tipo: proceso
+    nombre: Sistema SUBI
+  - id: pasajero
+    tipo: entidad
+    nombre: Pasajero
+  - id: supervisor
+    tipo: entidad
+    nombre: Supervisor General
+  - id: responsable
+    tipo: entidad
+    nombre: Responsable del Medio de Transporte
+flujos:
+  - de: pasajero
+    a: sistema
+    etiqueta: Pago de viaje (tarjeta SUBI)
+  - de: sistema
+    a: pasajero
+    etiqueta: Mensaje "saldo insuficiente"
+  - de: sistema
+    a: supervisor
+    etiqueta: Estadística mensual
+  - de: sistema
+    a: responsable
+    etiqueta: Listado mensual por medio de transporte

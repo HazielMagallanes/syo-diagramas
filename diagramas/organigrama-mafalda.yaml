@@ -1,0 +1,105 @@
+tipo: organigrama
+titulo: Mafalda S.A. — Artefactos de baño, mamparas y pisos cerámicos
+disposicion: vertical
+esSA: true
+nota: >-
+  Enunciado de la U3. Por ser S.A. se agregan AGA y Directorio (regla de la
+  cátedra), aunque el texto solo detalla desde la Gerencia General. La Oficina
+  de Seguridad depende jerárquicamente de Sistemas y tiene supervisión directa
+  del Gerente General: se representa con línea de dependencia funcional.
+  Los departamentos Mayorista y Minorista están departamentalizados por área
+  geográfica.
+unidades:
+  - id: aga
+    nombre: Asamblea General de Accionistas
+  - id: directorio
+    nombre: Directorio
+    padre: aga
+  - id: gg
+    nombre: Gerente General
+    padre: directorio
+  - id: asesor-impositivo
+    nombre: Asesor Impositivo
+    vinculo: staff
+    asesoraA: gg
+    lado: der
+
+  - id: comercializacion
+    nombre: Gerencia de Comercialización
+    padre: gg
+  - id: mayorista
+    nombre: Departamento Mayorista (por área geográfica)
+    padre: comercializacion
+  - id: minorista
+    nombre: Departamento Minorista (por área geográfica)
+    padre: comercializacion
+  - id: promocion
+    nombre: Departamento de Promoción y Publicidad
+    padre: comercializacion
+  - id: oficina-admin-publicidad
+    nombre: Oficina Administrativa (5 empleados)
+    padre: promocion
+
+  - id: administracion
+    nombre: Gerencia Administrativa
+    padre: gg
+  - id: costos
+    nombre: Departamento de Costos
+    padre: administracion
+  - id: contable
+    nombre: Departamento Contable
+    padre: administracion
+  - id: seccion-costos
+    nombre: Sección Contabilidad de Costos
+    padre: contable
+  - id: seccion-impuestos
+    nombre: Sección Impuestos
+    padre: contable
+  - id: oficina-materia-prima
+    nombre: Oficina Materia Prima
+    padre: seccion-costos
+  - id: oficina-mano-obra
+    nombre: Oficina Mano de Obra
+    padre: seccion-costos
+  - id: oficina-gastos
+    nombre: Oficina Gastos Indirectos
+    padre: seccion-costos
+
+  - id: produccion
+    nombre: Gerencia de Producción
+    padre: gg
+  - id: control
+    nombre: Departamento de Control
+    padre: produccion
+  - id: productos
+    nombre: Departamento de Productos
+    padre: produccion
+  - id: of-artefactos
+    nombre: Oficina Artefactos para Baños
+    padre: productos
+  - id: of-mamparas
+    nombre: Oficina Mamparas de Acrílico
+    padre: productos
+  - id: of-pisos
+    nombre: Oficina Pisos Cerámicos
+    padre: productos
+
+  - id: sistemas
+    nombre: Gerencia de Sistemas
+    padre: gg
+  - id: sist-ingresos
+    nombre: Proceso Ingresos
+    padre: sistemas
+  - id: sist-procesamiento
+    nombre: Proceso Procesamiento
+    padre: sistemas
+  - id: sist-archivo
+    nombre: Proceso Archivo
+    padre: sistemas
+  - id: oficina-tecnica
+    nombre: Oficina Técnica
+    padre: sistemas
+  - id: oficina-seguridad
+    nombre: Oficina de Seguridad
+    padre: sistemas
+    funcionalA: gg

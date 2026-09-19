@@ -1,0 +1,82 @@
+tipo: organigrama
+titulo: D&H — Muebles para el hogar
+disposicion: vertical
+nota: >-
+  Ejercicio de clase. Las asesorías (Legal, Contable y la del área de Sistemas)
+  son staff: línea punteada al costado, sin autoridad de mando. La Gerencia de
+  Comercialización está departamentalizada por área geográfica; Producción, por
+  funciones.
+unidades:
+  - id: presidencia
+    nombre: Presidencia
+  - id: asesoria-legal
+    nombre: Asesoría Legal
+    vinculo: staff
+    asesoraA: presidencia
+    lado: izq
+  - id: gg
+    nombre: Gerencia General
+    padre: presidencia
+
+  - id: seguridad
+    nombre: Sección de Seguridad
+    padre: gg
+  - id: control-calidad
+    nombre: Sección de Control de Calidad
+    padre: gg
+
+  - id: comercializacion
+    nombre: Gerencia de Comercialización
+    padre: gg
+  - id: publicidad
+    nombre: Oficina de Publicidad
+    padre: comercializacion
+  - id: gba
+    nombre: Sección GBA
+    padre: comercializacion
+  - id: capital
+    nombre: Sección Capital Federal
+    padre: comercializacion
+  - id: resto
+    nombre: Sección Resto del País
+    padre: comercializacion
+
+  - id: produccion
+    nombre: Gerencia de Producción
+    padre: gg
+  - id: fabricacion
+    nombre: Departamento de Fabricación
+    padre: produccion
+  - id: planeamiento
+    nombre: Departamento de Planeamiento
+    padre: produccion
+
+  - id: administracion
+    nombre: Gerencia Administrativa
+    padre: gg
+  - id: cobranzas
+    nombre: Sección Cobranzas y Pagos
+    padre: administracion
+  - id: liquidacion
+    nombre: Sección Liquidación de Sueldos
+    padre: administracion
+  - id: asesoria-contable
+    nombre: Asesoría Contable
+    vinculo: staff
+    asesoraA: administracion
+    lado: der
+
+  - id: sistemas
+    nombre: Gerencia de Sistemas
+    padre: gg
+  - id: programacion
+    nombre: Sección de Programación
+    padre: sistemas
+  - id: investigacion
+    nombre: Oficina de Investigación
+    padre: sistemas
+  - id: asesor-sistemas
+    nombre: Asesor de Sistemas
+    vinculo: staff
+    asesoraA: sistemas
+    lado: der

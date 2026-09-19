@@ -1,0 +1,5 @@
+node_modules/
+dist/
+salida/
+*.local
+.DS_Store

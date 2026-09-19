@@ -1,0 +1,44 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+/* Resaltado de nodos con hallazgos */
+.nodo-resaltado {
+  stroke: #dc2626 !important;
+  stroke-width: 3 !important;
+  filter: drop-shadow(0 0 4px rgb(220 38 38 / 0.6));
+}
+
+/* El SVG de vista previa se adapta al ancho disponible */
+.lienzo svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* CodeMirror ocupa todo el alto de su contenedor */
+.cm-editor {
+  height: 100%;
+}
+.cm-scroller {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+}

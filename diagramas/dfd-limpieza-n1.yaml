@@ -1,0 +1,87 @@
+tipo: dfd
+titulo: Venta de productos de limpieza
+nivel: 1
+nota: >-
+  Nivel 1: los procesos se comunican a través de los almacenes (en nivel 1 no se
+  permiten flujos directos entre procesos).
+nodos:
+  - id: estudio-mercado
+    tipo: entidad
+    nombre: Departamento de Estudio de Mercado
+  - id: clientes
+    tipo: entidad
+    nombre: Clientes
+  - id: marketing
+    tipo: entidad
+    nombre: Departamento de Marketing
+
+  - id: p1
+    tipo: proceso
+    numero: "1"
+    nombre: Gestionar contactos y citas
+  - id: p2
+    tipo: proceso
+    numero: "2"
+    nombre: Controlar visitas
+  - id: p3
+    tipo: proceso
+    numero: "3"
+    nombre: Clasificar y reportar
+
+  - id: a-clientes
+    tipo: almacen
+    nombre: Clientes
+    detalle: datos personales para mailings
+  - id: a-citas
+    tipo: almacen
+    nombre: Citas
+    detalle: agenda de visitas concertadas
+  - id: a-visitas
+    tipo: almacen
+    nombre: Visitas
+    detalle: resultados, tarjetas, perfil de empresa
+flujos:
+  - de: estudio-mercado
+    a: p1
+    etiqueta: Informe de mercado
+  - de: clientes
+    a: p1
+    etiqueta: Datos personales
+  - de: p1
+    a: clientes
+    etiqueta: Contacto telefónico / mailings
+  - de: p1
+    a: a-clientes
+    etiqueta: Registra datos
+  - de: p1
+    a: a-citas
+    etiqueta: Agenda cita
+
+  - de: a-clientes
+    a: p2
+    etiqueta: Datos del cliente
+  - de: a-citas
+    a: p2
+    etiqueta: Cita concertada
+  - de: clientes
+    a: p2
+    etiqueta: Identificación y tarjeta firmada
+  - de: p2
+    a: clientes
+    etiqueta: Tarjeta de entrada
+  - de: p2
+    a: a-visitas
+    etiqueta: Registra visita
+
+  - de: a-clientes
+    a: p3
+    etiqueta: Datos del cliente
+  - de: a-visitas
+    a: p3
+    etiqueta: Resultados de visitas
+  - de: p3
+    a: a-clientes
+    etiqueta: Actualiza perfil de empresa
+  - de: p3
+    a: marketing
+    etiqueta: Informe semanal clasificado

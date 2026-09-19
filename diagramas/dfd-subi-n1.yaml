@@ -1,0 +1,50 @@
+tipo: dfd
+titulo: Sistema SUBI — Secretaría de Transporte
+nivel: 1
+nota: >-
+  Nivel 1: P1 y P2 se comunican a través del almacén Viajes (en nivel 1 no hay
+  flujos directos entre procesos). El dispositivo lector está encapsulado en P1.
+nodos:
+  - id: pasajero
+    tipo: entidad
+    nombre: Pasajero
+  - id: supervisor
+    tipo: entidad
+    nombre: Supervisor General
+  - id: responsable
+    tipo: entidad
+    nombre: Responsable del Medio de Transporte
+
+  - id: p1
+    tipo: proceso
+    numero: "1"
+    nombre: Procesar pago de viaje
+  - id: p2
+    tipo: proceso
+    numero: "2"
+    nombre: Generar reportes mensuales
+
+  - id: a-viajes
+    tipo: almacen
+    nombre: Viajes
+    detalle: nro. tarjeta, tipo de transporte, fecha y hora
+flujos:
+  - de: pasajero
+    a: p1
+    etiqueta: Pago de viaje
+  - de: p1
+    a: pasajero
+    etiqueta: Mensaje "saldo insuficiente"
+  - de: p1
+    a: a-viajes
+    etiqueta: Registra detalle del viaje
+
+  - de: a-viajes
+    a: p2
+    etiqueta: Viajes del mes
+  - de: p2
+    a: supervisor
+    etiqueta: Estadística (medio, banda horaria, totales)
+  - de: p2
+    a: responsable
+    etiqueta: Listado por medio de transporte

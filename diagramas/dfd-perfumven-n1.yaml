@@ -1,0 +1,103 @@
+tipo: dfd
+titulo: Perfumven — Distribuidora de cosméticos y perfumería
+nivel: 1
+nota: >-
+  Nivel 1. Corregido respecto del borrador: la "necesidad de compra" no viaja
+  de P2 a P3 como flujo directo (en nivel 1 no se permiten flujos entre
+  procesos); P3 monitorea el inventario y decide la compra. Si se explotara al
+  nivel 2, el flujo directo entre subprocesos sí sería válido.
+nodos:
+  - id: tiendas
+    tipo: entidad
+    nombre: Mini Tiendas
+  - id: proveedores
+    tipo: entidad
+    nombre: Proveedores
+
+  - id: p1
+    tipo: proceso
+    numero: "1"
+    nombre: Recepcionar pedidos
+  - id: p2
+    tipo: proceso
+    numero: "2"
+    nombre: Preparar despachos
+  - id: p3
+    tipo: proceso
+    numero: "3"
+    nombre: Gestionar compras
+  - id: p4
+    tipo: proceso
+    numero: "4"
+    nombre: Facturar y cobrar
+  - id: p5
+    tipo: proceso
+    numero: "5"
+    nombre: Procesar devoluciones
+
+  - id: a-pedidos
+    tipo: almacen
+    nombre: Pedidos Acumulados
+    detalle: acumulados por artículo
+  - id: a-inventario
+    tipo: almacen
+    nombre: Inventario
+  - id: a-cobrar
+    tipo: almacen
+    nombre: Cuentas por Cobrar
+flujos:
+  - de: tiendas
+    a: p1
+    etiqueta: Pedido semanal
+  - de: p1
+    a: a-pedidos
+    etiqueta: Pedidos por artículo
+
+  - de: a-pedidos
+    a: p2
+    etiqueta: Pedidos pendientes
+  - de: a-inventario
+    a: p2
+    etiqueta: Stock disponible
+  - de: p2
+    a: a-inventario
+    etiqueta: Descuenta stock
+  - de: p2
+    a: tiendas
+    etiqueta: Despacho + nota de entrega
+
+  - de: a-inventario
+    a: p3
+    etiqueta: Stock actual
+  - de: p3
+    a: proveedores
+    etiqueta: Pedido de compra
+  - de: proveedores
+    a: p3
+    etiqueta: Entrega + factura
+  - de: p3
+    a: a-inventario
+    etiqueta: Actualiza stock
+
+  - de: tiendas
+    a: p4
+    etiqueta: Nota aceptada + pago
+  - de: a-pedidos
+    a: p4
+    etiqueta: Pedidos para facturar
+  - de: p4
+    a: tiendas
+    etiqueta: Factura
+  - de: p4
+    a: a-cobrar
+    etiqueta: Actualiza saldo
+  - de: p4
+    a: proveedores
+    etiqueta: Pago
+
+  - de: tiendas
+    a: p5
+    etiqueta: Devolución
+  - de: p5
+    a: a-inventario
+    etiqueta: Reingresa mercadería

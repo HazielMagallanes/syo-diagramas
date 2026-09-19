@@ -1,0 +1,28 @@
+tipo: dfd
+titulo: Perfumven — Distribuidora de cosméticos y perfumería
+nivel: 0
+nota: >-
+  Nivel 0 (contexto): el sistema completo como un único proceso, sin almacenes.
+nodos:
+  - id: sistema
+    tipo: proceso
+    nombre: Sistema Perfumven
+  - id: tiendas
+    tipo: entidad
+    nombre: Mini Tiendas
+  - id: proveedores
+    tipo: entidad
+    nombre: Proveedores
+flujos:
+  - de: tiendas
+    a: sistema
+    etiqueta: Pedido semanal / nota aceptada / pago / devolución
+  - de: sistema
+    a: tiendas
+    etiqueta: Despacho + nota de entrega / factura
+  - de: sistema
+    a: proveedores
+    etiqueta: Pedido de compra / pago
+  - de: proveedores
+    a: sistema
+    etiqueta: Entrega de mercadería / factura
