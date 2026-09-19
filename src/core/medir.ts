@@ -37,8 +37,9 @@ export function anchoTexto(texto: string, tamano = 13): number {
   return maximo * tamano
 }
 
-/** Envuelve el texto en líneas que no superen `anchoMax` píxeles. */
+/** Envuelve el texto en líneas (sin cortar palabras) que no superen `anchoMax` píxeles. */
 export function envolver(texto: string, anchoMax: number, tamano = 13): string[] {
+  const max = Math.max(20, anchoMax)
   const lineas: string[] = []
   for (const parrafo of texto.split('\n')) {
     const palabras = parrafo.split(/\s+/).filter(Boolean)
@@ -49,7 +50,7 @@ export function envolver(texto: string, anchoMax: number, tamano = 13): string[]
     let actual = ''
     for (const palabra of palabras) {
       const candidata = actual ? `${actual} ${palabra}` : palabra
-      if (anchoTexto(candidata, tamano) <= anchoMax || !actual) {
+      if (anchoTexto(candidata, tamano) <= max || !actual) {
         actual = candidata
       } else {
         lineas.push(actual)
@@ -57,6 +58,47 @@ export function envolver(texto: string, anchoMax: number, tamano = 13): string[]
       }
     }
     if (actual) lineas.push(actual)
+  }
+  return lineas
+}
+
+/**
+ * Como `envolver`, pero corta las palabras que no entran (último recurso para
+ * celdas radiales muy angostas).
+ */
+export function envolverDuro(texto: string, anchoMax: number, tamano = 13): string[] {
+  const max = Math.max(20, anchoMax)
+  const lineas: string[] = []
+  for (const parrafo of texto.split('\n')) {
+    const palabras = parrafo.split(/\s+/).filter(Boolean)
+    if (palabras.length === 0) {
+      lineas.push('')
+      continue
+    }
+    let actual = ''
+    const volcar = (): void => {
+      if (actual) {
+        lineas.push(actual)
+        actual = ''
+      }
+    }
+    for (let palabra of palabras) {
+      while (anchoTexto(palabra, tamano) > max && palabra.length > 1) {
+        let corte = palabra.length - 1
+        while (corte > 1 && anchoTexto(palabra.slice(0, corte), tamano) > max) corte--
+        volcar()
+        lineas.push(palabra.slice(0, corte))
+        palabra = palabra.slice(corte)
+      }
+      const candidata = actual ? `${actual} ${palabra}` : palabra
+      if (anchoTexto(candidata, tamano) <= max || !actual) {
+        actual = candidata
+      } else {
+        lineas.push(actual)
+        actual = palabra
+      }
+    }
+    volcar()
   }
   return lineas
 }

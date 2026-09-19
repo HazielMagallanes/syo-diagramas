@@ -52,19 +52,24 @@ unidades:
 
 - `vertical`: pirámide clásica, niveles de arriba hacia abajo.
 - `horizontal`: la jerarquía avanza de izquierda a derecha.
-- `circular`: la raíz al centro y anillos concéntricos por nivel, con una costura arriba.
-- `semicircular`: como la circular, pero en abanico sobre media circunferencia (raíz al pie).
+- `circular`: **anillos concéntricos divididos en celdas** (estilo de la cátedra): la raíz
+  ocupa el círculo central y cada nivel es un anillo cuyas celdas reparten el ángulo de su
+  padre. Las etiquetas van horizontales si entran en la celda y, si no, rotadas siguiendo el
+  radio (invertidas en la mitad izquierda para no quedar cabeza abajo).
+- `semicircular`: el mismo esquema en abanico sobre media circunferencia, con la raíz arriba
+  al centro y los anillos abriéndose hacia abajo.
 
-En todas: mismo nivel → misma altura (o mismo radio), garantizado por el motor de layout.
-En las radiales, los sectores se reparten según la cantidad de hojas de cada rama y el motor
-agranda los anillos hasta que no queda ninguna caja superpuesta.
+En las rectangulares: mismo nivel → misma altura. En las radiales: mismo nivel → mismo anillo.
+Los asesores (staff) se dibujan como una celda más, con **borde punteado**, y la dependencia
+funcional (`funcionalA`) como un **cordón punteado** entre las dos celdas.
 
-Con `mostrarNiveles: true` se dibujan las guías: franjas horizontales en vertical/horizontal,
-y circunferencias (o arcos) punteados con "Nivel N" en circular/semicircular.
+Con `mostrarNiveles: true` se agregan guías de nivel en las disposiciones rectangulares
+(franjas horizontales/verticales con "Nivel N"). En circular/semicircular no hacen falta:
+los anillos ya muestran los niveles.
 
 > Recomendación: para organizaciones grandes (más de ~4 niveles o muchos nodos) las
-> disposiciones vertical u horizontal se leen mejor; la circular queda más linda pero
-> ocupa mucha área.
+> disposiciones vertical u horizontal se leen mejor; la circular/semicircular es la que
+> usan las diapositivas para organizaciones chicas y medianas.
 
 ---
 
