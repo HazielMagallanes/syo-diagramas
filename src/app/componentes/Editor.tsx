@@ -8,6 +8,7 @@ import { SOLO_GRAFICADOR } from '../entorno'
 import { debeBloquearRender } from '../utiles/modo'
 import { EditorYaml } from './EditorYaml'
 import { PanelHallazgos } from './PanelHallazgos'
+import { SintaxisYaml } from './SintaxisYaml'
 import { VistaPrevia } from './VistaPrevia'
 import { descargarPdf, descargarPng, descargarSvg, descargarTexto } from '../utiles/exportar'
 
@@ -83,6 +84,10 @@ export function Editor({
   const [leyenda, setLeyenda] = useState(true)
   const refLienzo = useRef<HTMLDivElement>(null)
   const [aviso, setAviso] = useState<string | null>(null)
+  // La hoja de sintaxis también se puede abrir con #sintaxis.
+  const [mostrarSintaxis, setMostrarSintaxis] = useState(
+    () => typeof location !== 'undefined' && location.hash === '#sintaxis',
+  )
 
   const render = useMemo(() => {
     if (!diagrama || debeBloquearRender(hallazgos, SOLO_GRAFICADOR)) return null
@@ -193,6 +198,12 @@ export function Editor({
         >
           JSON
         </Boton>
+
+        <span className="mx-1 hidden h-6 w-px bg-slate-300 sm:block dark:bg-slate-600" />
+        <Boton onClick={() => setMostrarSintaxis(true)} titulo="Hoja de sintaxis del YAML">
+          ? Sintaxis
+        </Boton>
+
         <div className="ml-auto flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
           <label className="flex items-center gap-1.5">
             <input type="checkbox" checked={monocromo} onChange={(e) => setMonocromo(e.target.checked)} />
@@ -296,6 +307,8 @@ export function Editor({
           </div>
         )}
       </div>
+
+      {mostrarSintaxis && <SintaxisYaml onCerrar={() => setMostrarSintaxis(false)} />}
     </section>
   )
 }

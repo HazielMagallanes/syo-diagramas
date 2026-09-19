@@ -32,6 +32,10 @@ Para probar el modo examen en desarrollo:
 VITE_SOLO_EDITOR=1 pnpm dev
 ```
 
+La app incluye una **hoja de sintaxis del YAML** (botón `? Sintaxis`, o directo en
+`#sintaxis`) con ejemplos copiables y la descripción de cada campo. Describe el formato del
+archivo, no las reglas de la materia.
+
 ## Comandos
 
 | Comando | Qué hace |
